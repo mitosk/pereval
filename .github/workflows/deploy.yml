@@ -1,4 +1,4 @@
-name: CI/CD Deploy
+name: Full CI/CD Deploy
 
 on:
   push:
@@ -10,20 +10,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up SSH
+      - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.8.1
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Test SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo 'SSH connection OK'"
+
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            cd ~/pereval &&
-            git pull origin main &&
-            source .venv/bin/activate &&
-            pip install -r requirements.txt &&
+            # Переходим в директорию проекта
+            mkdir -p ~/pereval
+            cd ~/pereval
+
+            # Клонируем репозиторий, если ещё нет .git
+            if [ ! -d .git ]; then
+              git clone https://github.com/mitosk/pereval.git .
+            else
+              git reset --hard
+              git pull origin main
+            fi
+
+            # Создаём виртуальное окружение, если его нет
+            if [ ! -d .venv ]; then
+              python3 -m venv .venv
+            fi
+
+            # Активируем виртуальное окружение
+            source .venv/bin/activate
+
+            # Устанавливаем зависимости
+            pip install --upgrade pip
+            pip install -r requirements.txt
+
+            # Перезапускаем сервис
             sudo systemctl restart pereval_api
           "
