@@ -1,37 +1,40 @@
-# app/schemas.py
-from datetime import datetime
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional, List, Dict
+
 
 class UserSchema(BaseModel):
     email: str
     fam: str
     name: str
-    otc: str
-    phone: str
+    otc: Optional[str]
+    phone: Optional[str]
+
 
 class CoordsSchema(BaseModel):
     latitude: float
     longitude: float
     height: int
 
-class LevelSchema(BaseModel):
-    winter: Optional[str] = ""
-    summer: Optional[str] = ""
-    autumn: Optional[str] = ""
-    spring: Optional[str] = ""
 
 class ImageSchema(BaseModel):
     data: str
-    title: str
+    title: Optional[str]
+
+
+class LevelSchema(BaseModel):
+    winter: Optional[str]
+    summer: Optional[str]
+    autumn: Optional[str]
+    spring: Optional[str]
+
 
 class PassCreateSchema(BaseModel):
-    beauty_title: str
+    beauty_title: Optional[str]
     title: str
-    other_titles: Optional[str] = ""
-    connect: Optional[str] = ""
-    add_time: datetime  # ✅ Pydantic сам конвертирует строку в datetime
+    other_titles: Optional[str]
+    connect: Optional[str]
+    add_time: str  # ISO формат, например "2025-11-06T21:00:00"
     user: UserSchema
     coords: CoordsSchema
     level: LevelSchema
-    images: List[ImageSchema]
+    images: Optional[List[ImageSchema]] = []

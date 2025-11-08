@@ -1,48 +1,58 @@
 import requests
 import json
 
-# URL твоего API
-url = "http://127.0.0.1:8000/submitData"
+BASE_URL = "http://127.0.0.1:8000/submitData"
 
-# Пример JSON для перевала
+# --- Данные для нового перевала ---
 payload = {
-    "beauty_title": "пер. ",
-    "title": "Пхия",
-    "other_titles": "Триев",
-    "connect": "соединяет долины",
-    "add_time": "2021-09-22T13:18:13",
+    "beauty_title": "Красивый перевал",
+    "title": "Перевал Тестовый",
+    "other_titles": "Тестовый",
+    "connect": "Маршрут 1",
+    "add_time": "2025-11-06T21:00:00",
     "user": {
         "email": "qwerty@mail.ru",
-        "fam": "Пупкин",
-        "name": "Василий",
+        "fam": "Иванов",
+        "name": "Иван",
         "otc": "Иванович",
-        "phone": "+7 555 55 55"
+        "phone": "+79991234567"
     },
     "coords": {
-        "latitude": 45.3842,
-        "longitude": 7.1525,
-        "height": 1200
+        "latitude": 60.0,
+        "longitude": 30.0,
+        "height": 200
     },
     "level": {
-        "winter": "",
-        "summer": "1А",
-        "autumn": "1А",
-        "spring": ""
+        "winter": "3A",
+        "summer": "1B",
+        "autumn": "2B",
+        "spring": "1A"
     },
     "images": [
-        {
-            "data": "iVBORw0KGgoAAAANSUhEUgAAAAUA\
-AAAFCAYAAACNbyblAAAAHElEQVQI12P4\
-//8/w38GIAXDIBKE0DHxgljNBAAO\
-9TXL0Y4OHwAAAABJRU5ErkJggg==",
-            "title": "Седловина"
-        }
+        {"data": "base64encodedstring", "title": "Вид с перевала"}
     ]
 }
 
-# Отправка POST-запроса
-response = requests.post(url, json=payload)
-
-# Вывод результата
-print("Статус:", response.status_code)
+# --- POST /submitData ---
+response = requests.post(BASE_URL, json=payload)
+print("POST статус:", response.status_code)
 print("Ответ JSON:", response.json())
+
+# --- GET /submitData/<id> ---
+pass_id = response.json().get("id")
+if pass_id:
+    response_get = requests.get(f"{BASE_URL}/{pass_id}")
+    print("GET по ID статус:", response_get.status_code)
+    print("GET по ID ответ:", response_get.json())
+
+# --- PATCH /submitData/<id> ---
+payload_update = payload.copy()
+payload_update["title"] = "Перевал Тестовый Обновлённый"
+response_patch = requests.patch(f"{BASE_URL}/{pass_id}", json=payload_update)
+print("PATCH статус:", response_patch.status_code)
+print("PATCH ответ:", response_patch.json())
+
+# --- GET /submitData/?user__email=<email> ---
+response_user = requests.get(f"{BASE_URL}/", params={"email": payload["user"]["email"]})
+print("GET по email статус:", response_user.status_code)
+print("GET по email ответ:", response_user.json())

@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
-from sqlalchemy.orm import relationship, declarative_base
-from sqlalchemy.sql import func
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy.orm import declarative_base, relationship
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -8,15 +8,14 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String, unique=True, nullable=False)
     fam = Column(String, nullable=False)
     name = Column(String, nullable=False)
-    otc = Column(String, nullable=True)
-    phone = Column(String, nullable=True)
-
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    otc = Column(String)
+    phone = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     passes = relationship("Pass", back_populates="user")
 
@@ -24,7 +23,7 @@ class User(Base):
 class Coords(Base):
     __tablename__ = "coords"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     height = Column(Integer, nullable=False)
@@ -33,23 +32,23 @@ class Coords(Base):
 
 
 class Pass(Base):
-    __tablename__ = "passes"
+    __tablename__ = "pereval_added"
 
-    id = Column(Integer, primary_key=True)
-    beauty_title = Column(String, nullable=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    beauty_title = Column(String)
     title = Column(String, nullable=False)
-    other_titles = Column(String, nullable=True)
-    connect = Column(String, nullable=True)
-    add_time = Column(DateTime, nullable=False)
+    other_titles = Column(String)
+    connect = Column(String)
+    add_time = Column(DateTime, default=datetime.utcnow)
     status = Column(String, default="new")  # статус модерации
 
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    coords_id = Column(Integer, ForeignKey("coords.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    coords_id = Column(Integer, ForeignKey("coords.id"))
 
-    level_winter = Column(String, nullable=True)
-    level_summer = Column(String, nullable=True)
-    level_autumn = Column(String, nullable=True)
-    level_spring = Column(String, nullable=True)
+    level_winter = Column(String)
+    level_summer = Column(String)
+    level_autumn = Column(String)
+    level_spring = Column(String)
 
     user = relationship("User", back_populates="passes")
     coords = relationship("Coords", back_populates="passes")
@@ -57,11 +56,11 @@ class Pass(Base):
 
 
 class Image(Base):
-    __tablename__ = "images"
+    __tablename__ = "pereval_images"
 
-    id = Column(Integer, primary_key=True)
-    pass_id = Column(Integer, ForeignKey("passes.id"), nullable=False)
-    data = Column(Text, nullable=False)  # base64
-    title = Column(String, nullable=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    pass_id = Column(Integer, ForeignKey("pereval_added.id"))
+    data = Column(String, nullable=False)
+    title = Column(String)
 
     pass_obj = relationship("Pass", back_populates="images")
