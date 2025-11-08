@@ -1,6 +1,13 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends
+from sqlalchemy.orm import Session
 from .repository import PassRepository
-from .schemas import PassCreateSchema
+from .schemas import (
+    PassCreateSchema,
+    PassUpdateSchema,
+    PassResponseSchema,
+    PatchResponseSchema
+)
 from .config import MEDIA_ROOT
 
 app = FastAPI()
@@ -18,7 +25,7 @@ def submit_data(payload: PassCreateSchema):
         raise HTTPException(status_code=500, detail="Ошибка при обработке данных")
 
 
-@app.get("/submitData/{pass_id}")
+@app.get("/submitData/{pass_id}", response_model=PassResponseSchema)
 def get_pass(pass_id: int):
     repo = PassRepository(media_root=MEDIA_ROOT)
     try:
@@ -27,24 +34,24 @@ def get_pass(pass_id: int):
             raise HTTPException(status_code=404, detail="Перевал не найден")
         return pass_obj
     except Exception:
-        raise HTTPException(status_code=500, detail="Ошибка при получении данных")
+        raise HTTPException(status_code=500, detail="Ошибка при обработке данных")
 
 
-@app.patch("/submitData/{pass_id}")
-def update_pass(pass_id: int, payload: PassCreateSchema):
+@app.patch("/submitData/{pass_id}", response_model=PatchResponseSchema)
+def update_pass(pass_id: int, payload: PassUpdateSchema):
     repo = PassRepository(media_root=MEDIA_ROOT)
     try:
-        state, message = repo.update_pass(pass_id, payload.dict())
-        return {"state": state, "message": message}
-    except Exception:
-        raise HTTPException(status_code=500, detail="Ошибка при обновлении данных")
+        success, message = repo.update_pass(pass_id, payload.dict(exclude_unset=True))
+        return {"state": 1 if success else 0, "message": message}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/submitData/")
-def get_passes_by_user(email: str):
+@app.get("/submitData/", response_model=list[PassResponseSchema])
+def get_passes_by_user(email: str = Query(..., alias="user__email")):
     repo = PassRepository(media_root=MEDIA_ROOT)
     try:
         passes = repo.get_passes_by_user_email(email)
         return passes
     except Exception:
-        raise HTTPException(status_code=500, detail="Ошибка при получении данных")
+        raise HTTPException(status_code=500, detail="Ошибка при обработке данных")
