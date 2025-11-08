@@ -1,4 +1,4 @@
-name: Full CI/CD Deploy
+name: Deploy
 
 on:
   push:
@@ -10,45 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Забираем код из репозитория
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2️⃣ Настраиваем SSH-агент с ключом из секретов
       - name: Setup SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@v0.8.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
+      # 3️⃣ Тестируем соединение с сервером
       - name: Test SSH connection
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo 'SSH connection OK'"
+          ssh -o StrictHostKeyChecking=no mltosk@158.160.165.251 "echo 'SSH connection successful!'"
 
-      - name: Deploy to server
+      # 4️⃣ Деплой (пример)
+      - name: Deploy application
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            # Переходим в директорию проекта
-            mkdir -p ~/pereval
-            cd ~/pereval
-
-            # Клонируем репозиторий, если ещё нет .git
-            if [ ! -d .git ]; then
-              git clone https://github.com/mitosk/pereval.git .
-            else
-              git reset --hard
-              git pull origin main
-            fi
-
-            # Создаём виртуальное окружение, если его нет
-            if [ ! -d .venv ]; then
-              python3 -m venv .venv
-            fi
-
-            # Активируем виртуальное окружение
-            source .venv/bin/activate
-
-            # Устанавливаем зависимости
-            pip install --upgrade pip
-            pip install -r requirements.txt
-
-            # Перезапускаем сервис
-            sudo systemctl restart pereval_api
-          "
+          ssh -o StrictHostKeyChecking=no mltosk@158.160.165.251 << 'EOF'
+            cd ~/pereval_api
+            git pull origin main
+            # Добавь здесь команды запуска приложения, если нужно
+            echo "Deployment finished!"
+          EOF
