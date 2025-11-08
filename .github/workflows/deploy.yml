@@ -1,31 +1,29 @@
-name: 🚀 Deploy Pereval API
+name: CI/CD Deploy
 
 on:
   push:
     branches:
-      - main  # или master, если твоя основная ветка так называется
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Deploy to server
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            cd ~/pereval && \
-            git pull origin main && \
-            source .venv/bin/activate && \
-            pip install -r requirements.txt && \
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            cd ~/pereval &&
+            git pull origin main &&
+            source .venv/bin/activate &&
+            pip install -r requirements.txt &&
             sudo systemctl restart pereval_api
           "
